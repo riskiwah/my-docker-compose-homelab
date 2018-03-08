@@ -1,1 +1,6 @@
-Docker-compose for my homelab
+# Docker-compose for my homelab
+
+# For run
+```
+docker-compose up -d
+```
