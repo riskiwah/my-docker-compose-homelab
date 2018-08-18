@@ -5,6 +5,7 @@ services:
     container_name: traefik
     image: traefik:1.5-alpine
     dns: "192.168.10.10"
+    restart: always
     ports:
       - 8080:8080
       - 80:80
@@ -15,10 +16,24 @@ services:
   ghost:
     container_name: ghost-blog
     image: ghost
+    restart: always
     ports:
       - 2368:2368
     labels:
       - "traefik.backend=ghost"
       - "traefik.frontend.rule=Host:test.riskiwah.net"
       - "traefik.port=2368"
+      - "traefik.frontend.entryPoints=http"
+  jenkins:
+    container_name: jenkins
+    image: jenkins
+    restart: always
+    ports:
+      - 8080:8080
+      - 50000:50000
+    labels:
+      - "traefik.backend=jenkins"
+      - "traefik.frontend.rule=Host:test2.riskiwah.net"
+      - "traefik.port=8080"
+      - "traefik.port=50000"
       - "traefik.frontend.entryPoints=http"
