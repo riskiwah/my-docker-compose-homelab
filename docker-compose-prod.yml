@@ -28,9 +28,9 @@ services:
     container_name: jenkins
     image: jenkins
     restart: always
-    ports:
-      - 8080:8080
-      - 50000:50000
+    # ports:
+    #   - 8080:8080
+    #   - 50000:50000
     labels:
       - "traefik.backend=jenkins"
       - "traefik.frontend.rule=Host:test2.riskiwah.net"
