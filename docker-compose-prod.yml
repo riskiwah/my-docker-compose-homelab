@@ -13,6 +13,8 @@ services:
              --entryPoints="Name:http Address::80" --docker.endpoint="unix:///var/run/docker.sock"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - "traefik.frontend.rule=Host:lb.riskiwah.net"
   ghost:
     container_name: ghost-blog
     image: ghost
@@ -21,7 +23,7 @@ services:
       - 2368:2368
     labels:
       - "traefik.backend=ghost"
-      - "traefik.frontend.rule=Host:test.riskiwah.net"
+      - "traefik.frontend.rule=Host:blog.riskiwah.net"
       - "traefik.port=2368"
       - "traefik.frontend.entryPoints=http"
   jenkins:
@@ -33,7 +35,7 @@ services:
     #   - 50000:50000
     labels:
       - "traefik.backend=jenkins"
-      - "traefik.frontend.rule=Host:test2.riskiwah.net"
+      - "traefik.frontend.rule=Host:jenkins.riskiwah.net"
       - "traefik.port=8080"
       # - "traefik.port=50000"
       - "traefik.frontend.entryPoints=http"
