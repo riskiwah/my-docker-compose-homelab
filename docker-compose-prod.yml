@@ -35,5 +35,5 @@ services:
       - "traefik.backend=jenkins"
       - "traefik.frontend.rule=Host:test2.riskiwah.net"
       - "traefik.port=8080"
-      - "traefik.port=50000"
+      # - "traefik.port=50000"
       - "traefik.frontend.entryPoints=http"
