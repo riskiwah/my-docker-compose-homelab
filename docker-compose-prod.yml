@@ -15,6 +15,16 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       - "traefik.frontend.rule=Host:lb.riskiwah.net"
+      - "com.centurylinklabs.watchtower.enable": "true"
+
+  watchtower:
+    container_name: watchtower
+    image: v2tec/watchtower:latest
+    restart: always
+    command: --schedule "0 0 5 * * 1" --cleanup
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   ghost:
     container_name: ghost-blog
     image: ghost
@@ -26,6 +36,8 @@ services:
       - "traefik.frontend.rule=Host:blog.riskiwah.net"
       - "traefik.port=2368"
       - "traefik.frontend.entryPoints=http"
+      - "com.centurylinklabs.watchtower.enable": "true"
+
   jenkins:
     container_name: jenkins
     image: jenkins
@@ -39,3 +51,67 @@ services:
       - "traefik.port=8080"
       # - "traefik.port=50000"
       - "traefik.frontend.entryPoints=http"
+      - "com.centurylinklabs.watchtower.enable": "true"
+
+  #### nextcloud ####
+  nextcloud-database:
+    container_name: nextcloud-database
+    image: mariadb:latest
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${NC_DB_PASSWORD}
+      MYSQL_PASSWORD: ${NC_DB_PASSWORD}
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+    labels:
+      - "com.centurylinklabs.watchtower.enable": "true"
+
+  nextcloud-redis:
+    container_name: nextcloud-redis
+    image: redis:alpine
+    restart: always
+    volumes:
+      - redis:/data
+    labels:
+      - "com.centurylinklabs.watchtower.enable": "true"
+
+  nextcloud:
+    container_name: nextcloud
+    image: wonderfall/nextcloud
+    restart: always
+    ports:
+      - 8888:8888
+    depends_on:
+      - nextcloud-database
+      - nextcloud-redis
+    links:
+      - nextcloud-database:nextcloud-database
+      - nextcloud-redis:nextcloud-redis
+    volumes:
+      - ./volume/cloud/data:/data
+      - ./volume/cloud/config:/config
+      - ./volume/cloud/apps:/apps2
+      - ./volume/cloud/themes:/nextcloud/themes
+    environment:
+      UID: 1000
+      GID: 1000
+      UPLOAD_MAX_SIZE: 100G
+      APC_SHM_SIZE: 128M
+      OPCACHE_MEM_SIZE: 128
+      CRON_PERIOD: 15m
+      TZ: Asia/Jakarta
+      DB_TYPE: mysql
+      DB_NAME: nextcloud
+      DB_USER: nextcloud
+      DB_PASSWORD: ${NC_DB_PASSWORD}
+      DB_HOST: nextcloud-database
+    labels:
+      - "traefik.backend=nextcloud"
+      - "traefik.frontend.rule=Host:nc.riskiwah.net"
+      - "traefik.port=8888"
+      - "traefik.frontend.entryPoints=http"
+      - "com.centurylinklabs.watchtower.enable": "true"
