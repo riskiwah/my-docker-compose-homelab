@@ -1,6 +1,6 @@
 # Docker-compose for my homelab
 
-# For run
+# For run :
 ```
-docker-compose up -d
+docker-compose -f [filename] up -d
 ```
