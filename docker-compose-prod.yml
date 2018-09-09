@@ -3,7 +3,7 @@ version: '3'
 volumes:
   database:
   redis:
-    
+
 services:
   traefik:
     container_name: traefik
@@ -18,7 +18,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
+      - "traefik.backend=traefik"
       - "traefik.frontend.rule=Host:lb.riskiwah.net"
+      - "traefik.port=8080"
+      - "traefik.frontend.entryPoints=http"
       - "com.centurylinklabs.watchtower.enable: true"
 
   watchtower:
