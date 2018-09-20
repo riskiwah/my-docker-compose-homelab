@@ -1,0 +1,22 @@
+pipeline:
+  ssh:
+    image: appleboy/drone-ssh
+    host:
+      - 192.168.x.x
+    username:
+    password:
+    port:
+    script:
+      - git clone https://gitlab.com/riskiwah/docker-compose-homelab.git
+      - cd docker-compose-homelab && docker-compose up -d
+      - rm -rf docker-compose-homelab
+  notify:
+    image: plugins/slack
+    webhook: https://hooks.slack.com/services/xxxxxxxxxxxxxxxx
+    channel: general
+    template: >
+      {{#success build.status}}
+        build {{build.number}} succeeded. Good job.
+      {{else}}
+        build {{build.number}} failed. Fix me please.
+      {{/success}}
