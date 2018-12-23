@@ -7,7 +7,7 @@ volumes:
 services:
   traefik:
     container_name: traefik
-    image: traefik:1.5-alpine
+    image: traefik:1.7-alpine
     dns: ${DNS}
     restart: always
     ports:
@@ -42,21 +42,6 @@ services:
       - "traefik.backend=ghost"
       - "traefik.frontend.rule=Host:blog.riskiwah.net"
       - "traefik.port=2368"
-      - "traefik.frontend.entryPoints=http"
-      - "com.centurylinklabs.watchtower.enable: true"
-
-  jenkins:
-    container_name: jenkins
-    image: jenkins
-    restart: always
-    # ports:
-    #   - 8080:8080
-    #   - 50000:50000
-    labels:
-      - "traefik.backend=jenkins"
-      - "traefik.frontend.rule=Host:jenkins.riskiwah.net"
-      - "traefik.port=8080"
-      # - "traefik.port=50000"
       - "traefik.frontend.entryPoints=http"
       - "com.centurylinklabs.watchtower.enable: true"
 
@@ -122,3 +107,50 @@ services:
       - "traefik.port=8888"
       - "traefik.frontend.entryPoints=http"
       - "com.centurylinklabs.watchtower.enable: true"
+  
+  gogs:
+    image: gogs/gogs
+    restart: always
+    ports:
+      # - "3000:3000"
+      - "3022:22"
+    volumes:
+      - "./data/gogs:/data"
+    labels:
+      - "traefik.backend=gogs"
+      - "traefik.frontend.rule=Host:git.riskiwah.net"
+      - "traefik.port=3000"
+      - "traefik.frontend.entryPoints=http"
+
+  drone-server:
+    image: drone/drone:0.8
+    restart: always
+    ports:
+      - "8000:8000"
+      - "9000:9000"
+    volumes:
+      - /var/lib/drone:/var/lib/drone/
+    environment:
+       - DRONE_OPEN=true
+       - DRONE_HOST=http://ci.riskiwah.net
+       - DRONE_ADMIN=${DRONE_ADMIN}
+       - DRONE_GOGS=true
+       - DRONE_GOGS_URL=${DRONE_GOGS}
+       - DRONE_SECRET=${DRONE_SECRET}
+    labels:
+       - "traefik.backend=ci"
+       - "traefik.frontend.rule=Host:ci.riskiwah.net"
+       - "traefik.port=8000"
+       - "traefik.frontend.entryPoints=http"
+       - "com.centurylinklabs.watchtower.enable: true"
+
+  drone-agent:
+    image: drone/agent:0.8
+    restart: always
+    depends_on:
+      - drone-server
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_SERVER=${DRONE_SERVER}
+      - DRONE_SECRET=${DRONE_SECRET}
