@@ -121,6 +121,7 @@ services:
       - "traefik.frontend.rule=Host:git.riskiwah.net"
       - "traefik.port=3000"
       - "traefik.frontend.entryPoints=http"
+      - "com.centurylinklabs.watchtower.enable: true"
 
   drone-server:
     image: drone/drone:0.8
@@ -154,3 +155,4 @@ services:
     environment:
       - DRONE_SERVER=${DRONE_SERVER}
       - DRONE_SECRET=${DRONE_SECRET}
+      - "com.centurylinklabs.watchtower.enable: true"
