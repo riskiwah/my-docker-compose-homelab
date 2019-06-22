@@ -32,20 +32,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  ghost:
-    container_name: ghost-blog
-    image: ghost
-    restart: always
-    ports:
-      - 2368:2368
-    labels:
-      - "traefik.backend=ghost"
-      - "traefik.frontend.rule=Host:blog.riskiwah.net"
-      - "traefik.port=2368"
-      - "traefik.frontend.entryPoints=http"
-      - "com.centurylinklabs.watchtower.enable: true"
-
-  #### nextcloud ####
   nextcloud-database:
     container_name: nextcloud-database
     image: mariadb:latest
@@ -123,36 +109,66 @@ services:
       - "traefik.frontend.entryPoints=http"
       - "com.centurylinklabs.watchtower.enable: true"
 
+  jenkins:
+    image: jenkins/jenkins:alpine
+    restart: always
+    user: jenkins
+    ports:
+      - "8070:8070"
+      - "5000:5000"
+      - "50000:50000"
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - JENKINS_HOST_HOME="/datajenk/jenkins"
+    labels:
+      - "traefik.backend=jenkins"
+      - "traefik.frontend.rule=Host:cicd.riskiwah.net"
+      - "traefik.port=8080"
+      - "traefik.frontend.entryPoints=http"
+      - "com.centurylinklabs.watchtower.enable: true"
+
   drone-server:
-    image: drone/drone:0.8
+    image: drone/drone:latest
     restart: always
     ports:
-      - "8000:8000"
+      - "8090:80"
       - "9000:9000"
     volumes:
       - /var/lib/drone:/var/lib/drone/
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
-       - DRONE_OPEN=true
-       - DRONE_HOST=http://ci.riskiwah.net
+       #- DRONE_OPEN=true
+       - DRONE_LOGS_DEBUG=true
+       - DRONE_GIT_ALWAYS_AUTH=false
+       - DRONE_SERVER_HOST=ci.riskiwah.net
+       - DRONE_SERVER_PROTO=http
+       - DRONE_AGENTS_ENABLED=true
        - DRONE_ADMIN=${DRONE_ADMIN}
        - DRONE_GOGS=true
-       - DRONE_GOGS_URL=${DRONE_GOGS}
+       - DRONE_GOGS_SERVER=${DRONE_GOGS}
        - DRONE_SECRET=${DRONE_SECRET}
+       - DRONE_RPC_SECRET=123
     labels:
        - "traefik.backend=ci"
        - "traefik.frontend.rule=Host:ci.riskiwah.net"
-       - "traefik.port=8000"
+       - "traefik.port=80"
        - "traefik.frontend.entryPoints=http"
        - "com.centurylinklabs.watchtower.enable: true"
 
   drone-agent:
-    image: drone/agent:0.8
+    image: drone/agent:latest
     restart: always
     depends_on:
       - drone-server
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - DRONE_SERVER=${DRONE_SERVER}
-      - DRONE_SECRET=${DRONE_SECRET}
+      #- DRONE_SERVER=${DRONE_SERVER}
+      #- DRONE_SECRET=${DRONE_SECRET}
+      - DRONE_RPC_SERVER=http://drone-server
+      - DRONE_RPC_SECRET=123
+      - DRONE_LOGS_DEBUG=true
+      - DRONE_RUNNER_CAPACITY=4
       - "com.centurylinklabs.watchtower.enable: true"
